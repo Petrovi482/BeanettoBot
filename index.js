@@ -498,13 +498,13 @@ async function Send_Statistic(ind){
         if (STATISTIC_FINAL_TYPE[ind]){
             if (ind == '0'){
                 const URL = BX_STAT_URL + '&PARAMETERS[START_PLUS]=' + encodeURI(STATISTIC_FINAL_TYPE[ind]) + '&PARAMETERS[FINISH_TYPE]=&PARAMETERS[COMMAND]=';
-                //console.log('STATISTIC: ', ind);
-                //console.log(URL);
+                console.log('STATISTIC: ', ind);
+                console.log(URL);
                 await fetch(URL);
             } else {
                 const URL = BX_STAT_URL + '&PARAMETERS[FINISH_TYPE]=' + encodeURI(STATISTIC_FINAL_TYPE[ind]) + '&PARAMETERS[START_PLUS]=&PARAMETERS[COMMAND]=';
-                //console.log('STATISTIC: ', ind);
-                //console.log(URL);
+                console.log('STATISTIC: ', ind);
+                console.log(URL);
                 await fetch(URL);
             }
         }
