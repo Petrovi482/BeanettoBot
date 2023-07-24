@@ -1,0 +1,20 @@
+{
+  "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.61.6"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.61.0",
+    "nodemon": "^2.0.22"
+  },
+  "name": "beanettobot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
