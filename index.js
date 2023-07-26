@@ -1,6 +1,7 @@
 const API_TOKEN = '6162695444:AAGLwjPR4WIoSZIS29l6xWDjhImlna-ntMQ';
 const BX_URL = 'https://gkv24.ru/rest/283/xnrdr9b32j5yotb9/bizproc.workflow.start.json?TEMPLATE_ID=212&DOCUMENT_ID[]=crm&DOCUMENT_ID[]=CCrmDocumentContact&DOCUMENT_ID[]=CONTACT_4191';
 const BX_STAT_URL = 'https://gkv24.ru/rest/283/xnrdr9b32j5yotb9/bizproc.workflow.start.json?TEMPLATE_ID=213&DOCUMENT_ID[]=crm&DOCUMENT_ID[]=CCrmDocumentContact&DOCUMENT_ID[]=CONTACT_4191';
+const COMMAND_KEY = 'XalS19CmakTKWebA';
 
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -134,7 +135,7 @@ const B24_FIELDS = {
 const BOT_SCHEME = {
     'start' : {
         stat : '0',
-        msg : 'Укажите номер аппарата, указанный над QR-кодом',
+        msg : 'Укажите номер аппарата, указанный рядом с QR-кодом',
         typ : SCHEME_TYPES.st_selecter,
         ops : {
             '1' : 'Не вижу номер',
@@ -470,7 +471,7 @@ const USER_POSITION = {};
 const PROBLEM_DATA = {};
 const USER_LAST_ACTIVE = {};
 const CURRENT_SELECTER = {};
-const TIME_OUT_LIMIT = 10 * 60 * 1000;
+const TIME_OUT_LIMIT = 10 * 60 * 1000;//10 минут
 const TIME_OUT_STOP_STADIES = ['final', 'start', '2_final', '6_final', '7_final', '72_final'];
 const FILES_COUNTER = {};
 
@@ -491,6 +492,59 @@ function Time_Out(chatId){
             Move_To_Position(chatId);
         }
     }, TIME_OUT_LIMIT)
+}
+
+async function Command_Bot(com,chatId){
+    //await BOT.sendMessage(chatId, 'Получен специальный код');
+    if (com === ''){
+        await BOT.sendMessage(chatId, 'Список команд:');
+        await BOT.sendMessage(chatId, 'ShowMeThePosition <point> - показывает позицию в схеме');
+        await BOT.sendMessage(chatId, 'SetPointMessage <point> <newMessage> - устанавливает новое значение поля msg в pos схемы');
+        return;
+    }
+    const commands = com.split(' ');
+    console.log('Command_Bot: ', commands);
+    try {
+        const pos = commands[1];
+        const obj = BOT_SCHEME[pos];
+        switch (commands[0]) {
+            case 'ShowMeThePosition':
+                await BOT.sendMessage(chatId, 'ShowMeThePosition');
+                if (!pos){
+                    await BOT.sendMessage(chatId, 'Ожидался параметр: позиция');
+                    return;
+                }
+                if (!obj){
+                    await BOT.sendMessage(chatId, 'Такой позиции в схеме не найдено');
+                    return;
+                }
+                await BOT.sendMessage(chatId, JSON.stringify(obj, null, 4));
+                break;
+            case 'SetPointMessage':
+                await BOT.sendMessage(chatId, 'SetPointMessage');
+                const msg = com.substring('SetPointMessage'.length + commands[1].length + 2);
+                console.log(msg);
+                if (!msg || !pos){
+                    await BOT.sendMessage(chatId, 'Ожидались параметры: позиция и новое сообщение');
+                    return;
+                }
+                if (!obj){
+                    await BOT.sendMessage(chatId, 'Такой позиции в схеме не найдено');
+                    return;
+                }
+                BOT_SCHEME[pos].msg = msg;
+                await BOT.sendMessage(chatId, 'Установлено новое значение: ' + msg);
+                await BOT.sendMessage(chatId, JSON.stringify(obj, null, 4));
+                break;
+            default:
+                await BOT.sendMessage(chatId, 'Неизвестная команда');
+                break;
+        }
+    } catch (error) {
+        console.log('Commands error: ');
+        console.log(error);
+        await BOT.sendMessage(chatId, 'Какая-то ошибка при использовании команд');
+    }
 }
 
 async function Send_Statistic(ind){
@@ -672,6 +726,15 @@ BOT.on('message', async (msg) => {
         PROBLEM_DATA[chatId] = {};
     }
     if (msg.text){
+        if ((msg.text.indexOf(COMMAND_KEY) === 0)){
+            const l = msg.text.length;
+            let com = '';
+            if (l > (COMMAND_KEY.length + 1)){
+                com = msg.text.substring(COMMAND_KEY.length + 1);
+            }
+            await Command_Bot(com, chatId);
+            return;
+        }
         if ((msg.text.indexOf('/start ') === 0) && (msg.text.length > 13)){
             const par_start = msg.text.substring(7);
             if (par_start.length > 0){
